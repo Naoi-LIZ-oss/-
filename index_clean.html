@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>互動式聊天介面</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC","Noto Sans TC",Arial,sans-serif;background:#101114;color:#111;overflow:hidden}
+  body{display:flex;align-items:center;justify-content:center}
+  .stage{width:100vw;height:100vh;position:relative;background:radial-gradient(circle at 50% 50%,#22252d 0,#13151a 30%,#0d0e11 68%);overflow:hidden}
+  .top-url{position:absolute;top:0;left:0;right:0;height:34px;background:#2b2c2f;color:#f0f0f0;font:13px/34px Arial;padding-left:20px;letter-spacing:.2px;z-index:5}
+  .hint{position:absolute;left:38px;top:47%;transform:translateY(-50%);color:#8d9097;max-width:430px;line-height:1.7;opacity:.85}
+  .hint h1{font-size:30px;color:#e8e8ea;margin:0 0 12px;font-weight:650}
+  .hint p{margin:5px 0;font-size:15px}
+  .hint .tag{display:inline-block;margin-top:15px;border:1px solid #3b3e45;border-radius:999px;padding:7px 12px;color:#b9bcc4;font-size:12px}
+
+  .phone{position:absolute;width:min(414px,42vw);height:min(900px,calc(100vh - 55px));min-height:680px;left:50%;top:50%;right:auto;transform:translate(-50%,-50%);border:2px solid #3e424a;border-radius:58px;padding:9px;background:#08090b;box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 0 0 2px #191b20}
+  .phone:before{content:"";position:absolute;left:-5px;top:165px;width:3px;height:54px;background:#3a3d43;border-radius:3px}
+  .phone:after{content:"";position:absolute;left:-5px;top:230px;width:3px;height:28px;background:#3a3d43;border-radius:3px}
+  .screen{height:100%;width:100%;border-radius:48px;overflow:hidden;background:#f3f3f4;position:relative}
+  .island{position:absolute;z-index:20;top:8px;left:50%;transform:translateX(-50%);width:124px;height:29px;border-radius:20px;background:#000}
+  .status{height:45px;padding:12px 18px 0;color:#111;display:flex;justify-content:space-between;font-weight:650;font-size:12px;position:relative;z-index:2}
+  .status .right{display:flex;gap:6px;align-items:center;font-weight:500}
+  .status .battery{border:1.5px solid #111;border-radius:4px;width:22px;height:11px;position:relative}.battery:after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:#111;border-radius:1px}.battery i{display:block;width:72%;height:100%;background:#111;border-radius:2px}
+
+  .app{height:calc(100% - 45px);display:flex;flex-direction:column;position:relative}
+  .header{height:69px;background:#f3f3f4;border-bottom:1px solid #d5d5d8;display:flex;align-items:center;justify-content:center;position:relative;font-size:18px;font-weight:700}
+  .header .back{position:absolute;left:14px;color:#1779ff;font-size:28px;display:none;cursor:pointer}
+  .header .title{cursor:default}
+  .header .actions{position:absolute;right:14px;display:flex;gap:15px;color:#087cff;font-size:26px;font-weight:400;align-items:center}
+  .icon{cursor:pointer;user-select:none}.icon:hover{opacity:.65}
+  .search{margin:10px 13px 7px;height:34px;background:#e5e5e8;border-radius:9px;display:flex;align-items:center;padding:0 10px;color:#8b8c91;gap:7px;font-size:14px}
+  .search input{border:0;outline:0;background:transparent;width:100%;font-size:14px;color:#222}
+  .list{flex:1;overflow:auto;background:#ededee}
+  .list::-webkit-scrollbar{width:0}
+  .chat{height:73px;border-bottom:1px solid #c9c9cc;display:flex;align-items:center;padding:0 14px;cursor:pointer;transition:background .15s;position:relative}
+  .chat:hover{background:#e3e3e5}.chat:active{background:#d8d8da}
+  .avatar{width:44px;height:44px;border-radius:50%;margin-right:11px;flex:none;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px;background:linear-gradient(145deg,#6f7780,#aab0b7);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .avatar img{width:100%;height:100%;object-fit:cover}
+  .avatar.pink{background:#e2b8c8}.avatar.blue{background:#c4d0dc}.avatar.gray{background:#c6c6c8;color:#666}.avatar.cyan{background:#72b9c6}.avatar.dark{background:#25292e}
+  .chat-main{min-width:0;flex:1}.name{font-size:16px;font-weight:650;line-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.preview{font-size:13px;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:20px}.time{align-self:flex-start;margin-top:11px;color:#777;font-size:12px;margin-left:6px}.badge{position:absolute;right:10px;bottom:14px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#ffd900;color:#111;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .bottom{height:72px;background:#f7f7f8;border-top:1px solid #d2d2d4;display:flex;justify-content:space-around;align-items:center;padding-bottom:5px}
+  .tab{width:25%;text-align:center;color:#888;cursor:pointer;font-size:11px}.tab .ti{font-size:25px;line-height:27px}.tab.active{color:#111}.tab:hover{color:#333}
+
+  .detail{position:absolute;inset:0;background:#f3f3f4;z-index:10;display:none;flex-direction:column}.detail.show{display:flex}
+  .detail-header{height:70px;border-bottom:1px solid #d0d0d3;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;position:relative;padding-top:4px}.detail-back{position:absolute;left:14px;color:#087cff;font-size:29px;cursor:pointer}.detail-user{position:absolute;right:14px;color:#087cff;font-size:24px}
+  .messages{flex:1;overflow:auto;padding:18px 14px;background:#efeff1}.bubble{max-width:76%;padding:9px 12px;border-radius:17px;margin:6px 0;font-size:14px;line-height:1.45;clear:both}.bubble.left{float:left;background:#fff;border:1px solid #ddd}.bubble.right{float:right;background:#007aff;color:#fff}.clearfix{clear:both}
+  .composer{height:55px;background:#f7f7f8;border-top:1px solid #d1d1d4;display:flex;gap:7px;padding:7px 10px}.composer input{flex:1;border:1px solid #d0d0d4;border-radius:18px;padding:0 13px;outline:none;font-size:14px;background:white}.send{border:0;border-radius:50%;width:40px;background:#087cff;color:#fff;font-size:18px;cursor:pointer}
+
+  .toast{position:absolute;z-index:50;left:50%;top:55px;transform:translateX(-50%) translateY(-20px);background:rgba(30,30,32,.92);color:white;padding:9px 14px;border-radius:14px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .modal{position:absolute;inset:0;z-index:40;background:rgba(0,0,0,.3);display:none;align-items:flex-end}.modal.show{display:flex}.sheet{background:#f5f5f6;border-radius:22px 22px 0 0;width:100%;padding:15px 18px 28px}.sheet h3{margin:2px 0 13px;text-align:center}.sheet button{width:100%;border:0;background:white;padding:13px;border-radius:12px;margin-top:7px;font-size:15px;cursor:pointer}.sheet .cancel{color:#d33}
+
+  @media(max-width:800px){.hint{display:none}.phone{left:50%;right:auto;transform:translate(-50%,-50%);width:min(414px,94vw);height:min(900px,96vh);min-height:620px}.top-url{display:none}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="top-url">ohw-iphone.app.workbuddy.host/?sharecode=MGZ3IUCLD3</div>
+  <div class="hint">
+    <h1></h1>
+    <p></p>
+    <p></p>
+    <span class="tag"></span>
+  </div>
+
+  <div class="phone">
+    <div class="screen">
+      <div class="island"></div>
+      <div class="status"><span>9:41</span><span class="right"><span>▮▮▮</span><span>⌁</span><span class="battery"><i></i></span></span></div>
+      <div class="app">
+        <div class="header">
+          <span class="back" id="globalBack">‹</span>
+          <span class="title" id="headerTitle">聊天</span>
+          <div class="actions"><span class="icon" id="searchToggle">⌕</span><span class="icon" id="addBtn">⊕</span></div>
+        </div>
+        <div class="search" id="searchBox"><span>⌕</span><input id="searchInput" placeholder="搜索聊天、邮件、备忘录..." /></div>
+        <div class="list" id="chatList"></div>
+        <div class="bottom">
+          <div class="tab" data-tab="friends"><div class="ti">♙</div>好友</div>
+          <div class="tab active" data-tab="chat"><div class="ti">◯</div>聊天</div>
+          <div class="tab" data-tab="search"><div class="ti">⌕</div>搜索</div>
+          <div class="tab" data-tab="more"><div class="ti">•••</div>更多</div>
+        </div>
+      </div>
+
+      <div class="detail" id="detail">
+        <div class="detail-header"><span class="detail-back" id="detailBack">‹</span><span id="detailName">聊天</span><span class="detail-user">ⓘ</span></div>
+        <div class="messages" id="messages"></div>
+        <div class="composer"><input id="messageInput" placeholder="輸入訊息..." /><button class="send" id="sendBtn">↑</button></div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+      <div class="modal" id="modal"><div class="sheet"><h3>新增聊天</h3><button data-new="好友">新增好友聊天</button><button data-new="群組">建立群組</button><button class="cancel" id="cancelModal">取消</button></div></div>
+    </div>
+  </div>
+</div>
+<script>
+const chats = [
+ {name:'薛仓蛙',preview:'我不打算还',time:'8:31',avatar:'薛',cls:'cyan'},
+ {name:'(˙-˙)',preview:'宝 姐姐 你完了',time:'8:57',badge:3,avatar:'(•)',cls:'pink'},
+ {name:'Lily',preview:'you know 我一直都在的',time:'8:33',avatar:'L',cls:'dark'},
+ {name:'Bae',preview:'海嫄姐姐 我刚才刷到一个视频 你跳那段的时候...',time:'8:36',badge:1,avatar:'B',cls:'cyan'},
+ {name:'jiwoo',preview:'等等我先说正事 我今天把胶囊割掉了',time:'8:39',badge:2,avatar:'J',cls:'pink'},
+ {name:'张主珍',preview:'还有我的护腰放你柜子里第二层了 记得拿',time:'8:44',badge:2,avatar:'张',cls:'cyan'},
+ {name:'姐姐',preview:'你上次说的那件外套我买了 下次回来拿',time:'9:04',badge:1,avatar:'姐',cls:'pink'},
+ {name:'妈妈',preview:'海嫄啊 妈给你寄了泡菜 明天到 记得收',time:'9:01',badge:1,avatar:'妈',cls:'blue'},
+ {name:'爸爸',preview:'好你忙',time:'上周日',avatar:'爸',cls:'gray'},
+ {name:'经纪人姐姐',preview:'上下午空出来的话 要不要把那首歌的 demo 补录...',time:'8:58',badge:2,avatar:'经',cls:'gray'}
+];
+let currentChat=null;
+const list=document.getElementById('chatList');
+const input=document.getElementById('searchInput');
+const detail=document.getElementById('detail');
+const messages=document.getElementById('messages');
+function render(filter=''){
+ list.innerHTML='';
+ chats.filter(c=>(c.name+c.preview).toLowerCase().includes(filter.toLowerCase())).forEach((c,i)=>{
+  const el=document.createElement('div'); el.className='chat'; el.dataset.i=i;
+  el.innerHTML=`<div class="avatar ${c.cls}">${c.avatar}</div><div class="chat-main"><div class="name">${c.name}</div><div class="preview">${c.preview}</div></div><div class="time">${c.time}</div>${c.badge?`<div class="badge">${c.badge}</div>`:''}`;
+  el.onclick=()=>openChat(c); list.appendChild(el);
+ });
+}
+function openChat(c){
+ currentChat=c; document.getElementById('detailName').textContent=c.name; detail.classList.add('show');
+ messages.innerHTML=`<div class="bubble left">${c.preview}</div><div class="clearfix"></div><div class="bubble right">收到～我等等回你</div><div class="clearfix"></div>`;
+ messages.scrollTop=messages.scrollHeight;
+}
+function toast(t){const x=document.getElementById('toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),1600)}
+input.addEventListener('input',()=>render(input.value));
+document.getElementById('detailBack').onclick=()=>detail.classList.remove('show');
+document.getElementById('searchToggle').onclick=()=>{document.getElementById('searchBox').scrollIntoView({behavior:'smooth'});input.focus();};
+document.getElementById('sendBtn').onclick=send;
+document.getElementById('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+function send(){const v=document.getElementById('messageInput').value.trim();if(!v)return;const b=document.createElement('div');b.className='bubble right';b.textContent=v;messages.appendChild(b);messages.insertAdjacentHTML('beforeend','<div class="clearfix"></div>');document.getElementById('messageInput').value='';messages.scrollTop=messages.scrollHeight;setTimeout(()=>{const r=document.createElement('div');r.className='bubble left';r.textContent='好～收到！';messages.appendChild(r);messages.insertAdjacentHTML('beforeend','<div class="clearfix"></div>');messages.scrollTop=messages.scrollHeight},600)}
+
+document.querySelectorAll('.tab').forEach(tab=>tab.onclick=()=>{
+ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
+ const t=tab.dataset.tab;
+ if(t==='chat'){document.getElementById('headerTitle').textContent='聊天';render(input.value);toast('已切換到聊天')}
+ else if(t==='search'){document.getElementById('headerTitle').textContent='搜索';input.focus();toast('請輸入關鍵字搜尋')}
+ else if(t==='friends'){document.getElementById('headerTitle').textContent='好友';toast('好友功能示範')}
+ else {document.getElementById('headerTitle').textContent='更多';toast('更多功能示範')}
+});
+const modal=document.getElementById('modal');
+document.getElementById('addBtn').onclick=()=>modal.classList.add('show');
+document.getElementById('cancelModal').onclick=()=>modal.classList.remove('show');
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
+modal.querySelectorAll('[data-new]').forEach(b=>b.onclick=()=>{toast('已選擇：'+b.dataset.new);modal.classList.remove('show')});
+render();
+</script>
+</body>
+</html>
